@@ -1,0 +1,12 @@
+version: '3.8'
+services:
+  localstack:
+    image: localstack/localstack:0.14
+    environment:
+      - DEFAULT_REGION=ap-southeast-2
+      - EDGE_PORT=4566
+      - SERVICES=s3,lambda,logs
+      - AWS_ACCESS_KEY_ID=local
+      - AWS_SECRET_ACCESS_KEY=local
+    ports:
+      - '4566-4583:4566-4583'
