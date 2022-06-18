@@ -4,7 +4,7 @@
 	"description": "Test a do-nothing lambda function",
 	"main": "index.js",
 	"scripts": {
-		"test": "jest",
+		"test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local jest",
 		"prebuild": "rm -rf dist",
 		"build": "tsc && esbuild src/index.ts --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
 		"postbuild": "cd dist && zip -r index.zip index.js*"
@@ -20,7 +20,17 @@
 	"dependencies": {
 		"@types/aws-lambda": "^8.10.100",
 		"aws-lambda": "^1.0.7",
+		"aws-sdk": "^2.1157.0",
 		"esbuild": "^0.14.45",
 		"typescript": "^4.7.4"
+	},
+	"devDependencies": {
+		"@types/jest": "^28.1.2",
+		"@types/mocha": "^9.1.1",
+		"jest": "^28.1.1",
+		"ts-jest": "^28.0.5"
+	},
+	"jest": {
+		"preset": "ts-jest"
 	}
 }
