@@ -5,7 +5,8 @@ services:
     environment:
       - DEFAULT_REGION=ap-southeast-2
       - EDGE_PORT=4566
-      - SERVICES=s3,lambda,logs
+      - SERVICES=lambda,logs,apigateway
+      - DEBUG=true
       - AWS_ACCESS_KEY_ID=local
       - AWS_SECRET_ACCESS_KEY=local
     ports:

@@ -79,29 +79,9 @@ resource "aws_lambda_function" "simple_lambda" {
   }
 }
 
-// set up s3
-resource "aws_s3_bucket" "simple_bucket" {
-  bucket = var.bucket_name
+// TODO: api gateway, pub subnet, security group, policy, attach, eip
 
-  tags = {
-    Environment = var.environment
-  }
-}
-
-// private
-resource "aws_s3_bucket_acl" "simple-bucket-to-private" {
-  bucket = aws_s3_bucket.simple_bucket.id
-  acl    = "private"
-}
-
-// set up s3 event trigger
-resource "aws_s3_bucket_notification" "s3-event-triggers-lambda" {
-  bucket = aws_s3_bucket.simple_bucket.id
-  lambda_function {
-    lambda_function_arn = aws_lambda_function.simple_lambda.arn
-    events              = ["s3:ObjectCreated:*"]
-  }
-}
+//
 
 // allow lambda invocation
 resource "aws_lambda_permission" "allow_invoke_lambda" {

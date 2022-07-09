@@ -1,9 +1,0 @@
-{
-  "LambdaFunctionConfigurations": [
-    {
-      "Id": "s3-event-triggers-lambda",
-      "LambdaFunctionArn": "arn:aws:lambda:ap-southeast-2:000000000000:function:simple-lambda",
-      "Events": ["s3:ObjectCreated:*"]
-    }
-  ]
-}

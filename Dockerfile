@@ -2,7 +2,7 @@ FROM public.ecr.aws/lambda/nodejs:16 as builder
 
 WORKDIR /usr/app
 
-COPY package.json index.ts ./
+COPY package.json src ./
 RUN npm install && npm run build
 
 # == #
