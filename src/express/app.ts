@@ -22,7 +22,7 @@ const jsonMiddleware = (
 	next: NextFunction
 ) =>
 	express.json()(request, response, (error) => {
-		invariant(!!error, "INVALID_JSON");
+		invariant(!error, "INVALID_JSON");
 		next();
 	});
 
@@ -31,7 +31,7 @@ const notFoundMiddleware = (
 	response: Response,
 	next: NextFunction
 ) => {
-	invariant(true, "NOT_FOUND");
+	invariant(false, "NOT_FOUND");
 	next();
 };
 

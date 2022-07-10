@@ -6,7 +6,7 @@ export const errors = {
 	NOT_FOUND: {
 		message: "Wrong way.",
 		code: 404,
-	}
+	},
 } as const;
 
 export type ErrorType = keyof typeof errors;
@@ -38,10 +38,10 @@ export class ApiError extends Error {
 }
 
 export const invariant = (
-	condition: boolean,
+	assertion: boolean,
 	errType: ErrorType
 ): true | never => {
-	if (condition) {
+	if (!assertion) {
 		const apiError = new ApiError(errType);
 		console.log(apiError.toString());
 		throw apiError;
