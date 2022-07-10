@@ -12,14 +12,11 @@ const s3Client = new AWS.S3({
 });
 AWS.config.update({ region: "ap-southeast-2" });
 
-const localConfigs = {
-};
+const localConfigs = {};
 
 const PREFIX_OBJ = "integ-test-";
 describe("testing lambda with localstack apigateway", () => {
 	describe("lambda handler", () => {
-		it("should handle http request", async () => {
-		
-		});
+		it("should handle http request", async () => {});
 	});
 });

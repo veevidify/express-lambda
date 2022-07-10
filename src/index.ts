@@ -1,10 +1,17 @@
-import {
+import type {
 	Context,
 	APIGatewayProxyResult,
 	APIGatewayProxyEventV2,
 	APIGatewayProxyCallbackV2,
 } from "aws-lambda";
+import type { Request } from "express";
 
+import createServerless from "@vendia/serverless-express";
+
+import { createApplication } from "./express/app";
+import { config } from "./config";
+
+const app = createApplication(config);
 export const handler = async (
 	event: APIGatewayProxyEventV2,
 	context: Context,
@@ -13,13 +20,10 @@ export const handler = async (
 	console.log("==> Event: ", JSON.stringify(event, null, 2));
 	console.log("==> Context: ", JSON.stringify(context, null, 2));
 
-	const recv = event.body;
-	const msg = "hello";
+	if (!event.queryStringParameters) {
+		event.queryStringParameters = {};
+	}
 
-	const resp: APIGatewayProxyResult = {
-		statusCode: 200,
-		body: JSON.stringify({ recv, msg }),
-	};
-
-	return resp;
+	const handle = createServerless({ app });
+	return handle(event, context, callback);
 };

@@ -1,3 +1,4 @@
+// == tf == //
 terraform {
   required_providers {
     aws = {
@@ -9,7 +10,7 @@ terraform {
   required_version = " >= 0.14.9"
 
   backend "s3" {
-    bucket = "some-backend"
+    bucket = var.backend_state
     key    = "apps/s3/terraform.tfstate"
     region = "ap-southeast-2"
 
@@ -18,51 +19,31 @@ terraform {
   }
 }
 
+
 provider "aws" {
   profile = "default"
   region  = "ap-southeast-2"
 }
 
-// == //
+// == end tf == //
 
-// iam resource: role
+// iam resource assume role
+data "aws_iam_policy_document" "assume_role_policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals = {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
 resource "aws_iam_role" "simple_lambda_iam" {
-  name = var.lambda_role_name
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+  name               = var.lambda_role_name
+  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
-// iam resource: role policy
-resource "aws_iam_role_policy" "revoke_keys_role_policy" {
-  name = var.lambda_iam_policy_name
-  role = aws_iam_role.simple_lambda_iam.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": ["s3:*"],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
 
 // set up lambda
 resource "aws_lambda_function" "simple_lambda" {
@@ -78,10 +59,6 @@ resource "aws_lambda_function" "simple_lambda" {
     }
   }
 }
-
-// TODO: api gateway, pub subnet, security group, policy, attach, eip
-
-//
 
 // allow lambda invocation
 resource "aws_lambda_permission" "allow_invoke_lambda" {
@@ -99,26 +76,24 @@ resource "aws_cloudwatch_log_group" "simple_log_group" {
 }
 
 // iam policy for lambda logging
+data "aws_iam_policy_document" "lambda_logging_policy" {
+  statement {
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+    resources = ["arn:aws:logs:*:*:*"]
+    effect    = "Allow"
+  }
+}
+
 resource "aws_iam_policy" "lambda_logging" {
   name        = var.lambda_logging_iam_policy_name
   path        = "/"
   description = "IAM policy for lambda function logging"
-  policy      = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  policy      = data.aws_iam_policy_document.lambda_logging_policy.json
 }
 
 // attach policy & role
@@ -126,3 +101,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   role       = aws_iam_role.simple_lambda_iam.name
   policy_arn = aws_iam_policy.lambda_logging.arn
 }
+
+// TODO: api gateway, pub subnet, security group, policy, attach, eip
+
+//

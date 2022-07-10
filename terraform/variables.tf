@@ -1,3 +1,7 @@
+variable "backend_state" {
+  default = "app-backend"
+}
+
 variable "lambda_function_name" {
   default = "simple-lambda"
 }
