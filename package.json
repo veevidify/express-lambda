@@ -6,7 +6,7 @@
 	"scripts": {
 		"test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local jest",
 		"prebuild": "rm -rf dist",
-		"build": "tsc && esbuild ./src --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=dist/index.js",
+		"build": "tsc && esbuild ./src --bundle --minify --sourcemap --platform=node --target=es2018 --outfile=dist/index.js",
 		"postbuild": "cd dist && zip -r index.zip index.js* && cp index.zip ../terraform/",
 		"localhost": "ts-node src/express-entrypoint.ts"
 	},

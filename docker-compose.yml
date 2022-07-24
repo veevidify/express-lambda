@@ -11,3 +11,13 @@ services:
       - AWS_SECRET_ACCESS_KEY=local
     ports:
       - '4566-4583:4566-4583'
+
+  deploy-env:
+    build:
+      context: ./deployer
+      dockerfile: tfenv.dockerfile
+    env_file:
+      - ./.env
+    volumes:
+      - ".:/app"
+    entrypoint: tail -F /tmp/keep-running.txt

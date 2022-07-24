@@ -1,3 +1,15 @@
+variable "backend_dynamodb_table" {
+  default = "terraform-up-and-running-locks"
+}
+
+variable "backend_bucket_name" {
+  default = "simple-bucket"
+}
+
+variable "backend_bucket_key" {
+  default = "apps/s3/terraform.tfstate"
+}
+
 variable "backend_state" {
   default = "app-backend"
 }
@@ -22,14 +34,10 @@ variable "lambda_iam_policy_name" {
   default = "simple-lambda-iam-policy"
 }
 
-variable "bucket_name" {
-  default = "simple-bucket"
-}
-
 variable "environment" {
   default = "dev"
 }
 
 variable "lambda_logging_iam_policy_name" {
-  default = "simple_lambda_logging"
+  default = "simple-lambda-logging-policy"
 }

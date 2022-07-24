@@ -10,15 +10,14 @@ terraform {
   required_version = " >= 0.14.9"
 
   backend "s3" {
-    bucket = var.backend_state
-    key    = "apps/s3/terraform.tfstate"
+    bucket = var.backend_bucket_name
+    key    = var.backend_bucket_key
     region = "ap-southeast-2"
 
-    dynamodb_table = "terraform-up-and-running-locks"
+    dynamodb_table = var.backend_dynamodb_table
     encrypt        = true
   }
 }
-
 
 provider "aws" {
   profile = "default"
