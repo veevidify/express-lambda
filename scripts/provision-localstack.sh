@@ -4,6 +4,7 @@ set -e
 export AWS_DEFAULT_REGION=ap-southeast-2
 export AWS_ACCESS_KEY_ID=local
 export AWS_SECRET_ACCESS_KEY=local
+export FUNCTION_NAME=express-lambda
 export API_NAME=express-lambda-api-gw
 
 echo "== package the lambda"
@@ -13,13 +14,13 @@ echo "<=="
 echo "== create the lambda function"
 aws --endpoint-url=http://localhost:4566 --region=ap-southeast-2 \
   lambda create-function \
-  --function-name express-lambda \
+  --function-name $FUNCTION_NAME \
   --zip-file fileb://dist/index.zip \
   --handler index.handler --runtime nodejs16.x \
   --role arn:aws:iam::000000000000:role/lambda-role | cat
 echo "<=="
 
-LAMBDA_ARN=$(aws --endpoint-url=http://localhost:4566 --region=ap-southeast-2 lambda list-functions --query "Functions[?FunctionName==\`${API_NAME}\`].FunctionArn" --output text)
+LAMBDA_ARN=$(aws --endpoint-url=http://localhost:4566 --region=ap-southeast-2 lambda list-functions --query "Functions[?FunctionName==\`${FUNCTION_NAME}\`].FunctionArn" --output text)
 
 echo "== create rest-api"
 aws --endpoint-url=http://localhost:4566 --region=ap-southeast-2 \
@@ -68,3 +69,11 @@ aws --endpoint-url=http://localhost:4566 --region=ap-southeast-2 \
   --rest-api-id ${API_ID} \
   --stage-name local | cat
 echo "<=="
+
+echo "== Provision localstack successful! =="
+echo "Details:"
+echo "LAMBDA_ARN: ${LAMBDA_ARN}"
+echo "RESOURCE_ID: ${RESOURCE_ID}"
+echo "API_NAME: ${API_NAME}"
+echo "API_ID: ${API_ID}"
+echo "To Test invocation: $ curl localhost:4566/restapis/${API_ID}/local/_user_request_/main"
