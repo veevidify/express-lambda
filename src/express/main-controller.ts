@@ -9,7 +9,7 @@ const mainController = async (
 		.status(200)
 		.type("application/json")
 		.send({
-			route: `${request.method} /${request.path}`,
+			route: `${request.method} ${request.path}`,
 			message: "Main Controller: Hello",
 		});
 };

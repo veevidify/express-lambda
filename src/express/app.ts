@@ -22,8 +22,12 @@ const jsonMiddleware = (
 	next: NextFunction
 ) =>
 	express.json()(request, response, (error) => {
-		const apiError = new ApiError("INVALID_JSON", error);
-		next(apiError);
+		if (error) {
+			const apiError = new ApiError("INVALID_JSON", error);
+			next(apiError);
+		} else {
+			next();
+		}
 	});
 
 const notFoundMiddleware = (
@@ -46,6 +50,10 @@ const handleApiErrorMiddleware = (
 	}
 
 	if (err instanceof ApiError) {
+		console.log({
+			apiError: err.toString(),
+			causedBy: JSON.stringify(err?.previousError),
+		});
 		response.status(err.code).send({
 			statusCode: err.code,
 			message: err.toString(),
@@ -69,6 +77,7 @@ const handleApiErrorMiddleware = (
 
 export const createApplication = (config: AppConfig): Application => {
 	const router: Router = express.Router();
+	router.get("/", mainController);
 	router.get("/main", mainController);
 
 	// === //
