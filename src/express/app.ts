@@ -13,7 +13,7 @@ import type {
 } from "express";
 import type { AppConfig } from "../config";
 
-import { invariant, ApiError } from "../utils";
+import { ApiError } from "../utils";
 import mainController from "./main-controller";
 
 const jsonMiddleware = (
@@ -22,8 +22,8 @@ const jsonMiddleware = (
 	next: NextFunction
 ) =>
 	express.json()(request, response, (error) => {
-		invariant(!error, "INVALID_JSON");
-		next();
+		const apiError = new ApiError("INVALID_JSON", error);
+		next(apiError);
 	});
 
 const notFoundMiddleware = (
@@ -31,8 +31,8 @@ const notFoundMiddleware = (
 	response: Response,
 	next: NextFunction
 ) => {
-	invariant(false, "NOT_FOUND");
-	next();
+	const apiError = new ApiError("NOT_FOUND");
+	next(apiError);
 };
 
 const handleApiErrorMiddleware = (
@@ -51,9 +51,18 @@ const handleApiErrorMiddleware = (
 			message: err.toString(),
 		});
 	} else {
+		console.log(
+			"Received unexpected error",
+			JSON.stringify({
+				message: (err as Partial<Error>)?.message,
+				stack: (err as Partial<Error>)?.stack,
+				raw: err,
+			})
+		);
+
 		response.status(500).send({
 			statusCode: 500,
-			message: JSON.stringify(err),
+			message: "Unknown Error.",
 		});
 	}
 };
