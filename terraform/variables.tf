@@ -10,10 +10,6 @@ variable "backend_bucket_key" {
   default = "apps/s3/terraform.tfstate"
 }
 
-variable "backend_state" {
-  default = "app-backend"
-}
-
 variable "lambda_function_name" {
   default = "simple-lambda"
 }

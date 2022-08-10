@@ -12,12 +12,14 @@ services:
     ports:
       - '4566-4583:4566-4583'
 
-  deploy-env:
+  tf:
     build:
       context: ./deployer
       dockerfile: tfenv.dockerfile
+    user: deployer
     env_file:
       - ./.env
     volumes:
       - ".:/app"
-    entrypoint: tail -F /tmp/keep-running.txt
+      - "~/.aws:/home/deployer/.aws"
+    entrypoint: sh deploy-tf.sh
