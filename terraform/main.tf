@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
     effect  = "Allow"
-    principals = {
+    principals {
       type        = "Service"
       identifiers = ["lambda.amazonaws.com"]
     }
@@ -52,15 +52,6 @@ resource "aws_lambda_function" "simple_lambda" {
       env = var.environment
     }
   }
-}
-
-// allow lambda invocation
-resource "aws_lambda_permission" "allow_invoke_lambda" {
-  statement_id  = "AllowS3Invoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.simple_lambda.function_name
-  principal     = "s3.amazonaws.com"
-  source_arn    = "arn:aws:s3:::${aws_s3_bucket.simple_bucket.id}"
 }
 
 // log group
@@ -114,16 +105,15 @@ resource "aws_apigatewayv2_stage" "simple_lambda_stage" {
     destination_arn = aws_cloudwatch_log_group.simple_log_group.arn
 
     format = jsonencode({
-      requestId                 = "$context.requestId"
-      sourceIp                  = "$context.identity.sourceIp"
-      requestTime               = "$context.requestTime"
-      protocol                  = "$context.protocol"
-      httpMethod                = "$context.httpMethod"
-      resourcePath              = "$context.resourcePath"
-      routeKey                  = "$context.routeKey"
-      status                    = "$context.status"
-      responseLength            = "$context.responseLength"
-      integrationErrorMessage.g = "$context.req"
+      requestId      = "$context.requestId"
+      sourceIp       = "$context.identity.sourceIp"
+      requestTime    = "$context.requestTime"
+      protocol       = "$context.protocol"
+      httpMethod     = "$context.httpMethod"
+      resourcePath   = "$context.resourcePath"
+      routeKey       = "$context.routeKey"
+      status         = "$context.status"
+      responseLength = "$context.responseLength"
     })
   }
 }
