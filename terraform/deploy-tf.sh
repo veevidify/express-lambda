@@ -15,7 +15,7 @@ terraform init \
     -backend-config="region=ap-southeast-2" \
     -backend-config="encrypt=true"
 
-echo "..Apply"
+echo "..Plan"
 terraform plan \
     -var="lambda_function_name=${TERRAFORM_AWS_FUNCTION_NAME}" \
     -var="lambda_role_name=${TERRAFORM_AWS_FUNCTION_ROLE_NAME}" \

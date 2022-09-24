@@ -12,7 +12,9 @@ services:
     ports:
       - '4566-4583:4566-4583'
 
-  tf:
+  # usage: docker-compose run tf-env
+  # then terraform init / terraform plan / terraform apply / terraform destroy
+  tf-env:
     build:
       context: ./deployer
       dockerfile: tfenv.dockerfile
@@ -22,4 +24,4 @@ services:
     volumes:
       - ".:/app"
       - "~/.aws:/home/deployer/.aws"
-    entrypoint: sh deploy-tf.sh
+    entrypoint: sh
