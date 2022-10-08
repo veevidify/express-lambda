@@ -75,7 +75,7 @@ const handleApiErrorMiddleware = (
 	}
 };
 
-export const createApplication = (config: AppConfig): Application => {
+export const createExpressApp = (config: AppConfig): Application => {
 	const router: Router = express.Router();
 	router.get("/", mainController);
 	router.get("/main", mainController);

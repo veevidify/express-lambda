@@ -8,10 +8,10 @@ import type { Request } from "express";
 
 import createServerless from "@vendia/serverless-express";
 
-import { createApplication } from "./express/app";
+import { createExpressApp } from "./express/app";
 import { config } from "./config";
 
-const app = createApplication(config);
+const app = createExpressApp(config);
 export const handler = async (
 	event: APIGatewayProxyEventV2,
 	context: Context,
