@@ -5,8 +5,6 @@
 # injecting environment variables into terraform variables to init/apply
 # these environment variables are injected into the container by docker-compose
 
-cd ../terraform
-
 echo "..Running init"
 terraform init \
     -backend-config="bucket=${TERRAFORM_BACKEND_BUCKET}" \
@@ -16,7 +14,7 @@ terraform init \
     -backend-config="encrypt=true"
 
 echo "..Plan"
-terraform plan \
+terraform apply \
     -var="lambda_function_name=${TERRAFORM_AWS_FUNCTION_NAME}" \
     -var="lambda_role_name=${TERRAFORM_AWS_FUNCTION_ROLE_NAME}" \
     -var="lambda_iam_policy_name=${TERRAFORM_AWS_FUNCITON_POLICY_NAME}" \

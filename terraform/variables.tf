@@ -37,3 +37,7 @@ variable "environment" {
 variable "lambda_logging_iam_policy_name" {
   default = "simple-lambda-logging-policy"
 }
+
+variable "api_gw_name" {
+  default = "simple-lambda-api-gw-rest"
+}

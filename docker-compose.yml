@@ -13,7 +13,7 @@ services:
       - '4566-4583:4566-4583'
 
   # usage: docker-compose run tf-env
-  # then terraform init / terraform plan / terraform apply / terraform destroy
+  # then run scripts terraform/plan-tf.sh etc
   tf-env:
     build:
       context: ./deployer

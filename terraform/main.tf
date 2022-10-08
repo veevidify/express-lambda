@@ -20,7 +20,8 @@ provider "aws" {
 
 // == end tf == //
 
-// iam resource assume role
+// == iam role for this lambda to manage access to other aws resources == //
+// policy document
 data "aws_iam_policy_document" "assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -32,14 +33,14 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-// lambda function iam role
+// creating the iam role resource
 resource "aws_iam_role" "simple_lambda_iam_role" {
   name               = var.lambda_role_name
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
 
-// create the lambda function
+// == create the function == //
 resource "aws_lambda_function" "simple_lambda" {
   filename         = "index.zip"
   function_name    = var.lambda_function_name
@@ -60,7 +61,8 @@ resource "aws_cloudwatch_log_group" "simple_log_group" {
   retention_in_days = 1
 }
 
-// iam policy for lambda logging
+// == iam policy to allow lambda iam role to write logs to cw
+// policy document
 data "aws_iam_policy_document" "lambda_logging_policy" {
   statement {
     actions = [
@@ -74,7 +76,7 @@ data "aws_iam_policy_document" "lambda_logging_policy" {
   }
 }
 
-// cloudwatch logging policy
+// iam policy
 resource "aws_iam_policy" "lambda_logging_policy" {
   name        = var.lambda_logging_iam_policy_name
   path        = "/"
@@ -88,57 +90,82 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = aws_iam_policy.lambda_logging_policy.arn
 }
 
-// api gateway
-resource "aws_apigatewayv2_api" "simple_lambda_api_gw" {
-  name          = "simple_lambda_api_gw"
-  protocol_type = "HTTP"
+
+// == api gateway == //
+// create the api rest api resource
+// will contain other api gw objects later
+resource "aws_api_gateway_rest_api" "api_gw_rest" {
+  name = var.api_gw_name
 }
 
-// api stage
-resource "aws_apigatewayv2_stage" "simple_lambda_stage" {
-  api_id = aws_apigatewayv2_api.simple_lambda_api_gw.id
-
-  name        = "simple_lambda_stage"
-  auto_deploy = true
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.simple_log_group.arn
-
-    format = jsonencode({
-      requestId      = "$context.requestId"
-      sourceIp       = "$context.identity.sourceIp"
-      requestTime    = "$context.requestTime"
-      protocol       = "$context.protocol"
-      httpMethod     = "$context.httpMethod"
-      resourcePath   = "$context.resourcePath"
-      routeKey       = "$context.routeKey"
-      status         = "$context.status"
-      responseLength = "$context.responseLength"
-    })
-  }
+// proxy matching request paths
+resource "aws_api_gateway_resource" "api_gw_proxy" {
+  rest_api_id = aws_api_gateway_rest_api.api_gw_rest.id
+  parent_id   = aws_api_gateway_rest_api.api_gw_rest.root_resource_id
+  path_part   = "{proxy+}"
 }
 
-// integrate with lambda
-resource "aws_apigatewayv2_integration" "simple_lambda_integration" {
-  api_id = aws_apigatewayv2_api.simple_lambda_api_gw.id
-
-  integration_uri    = aws_lambda_function.simple_lambda.invoke_arn
-  integration_type   = "AWS_PROXY"
-  integration_method = "POST"
+// allow http methods
+resource "aws_api_gateway_method" "api_gw_proxy_method" {
+  rest_api_id   = aws_api_gateway_rest_api.api_gw_rest.id
+  resource_id   = aws_api_gateway_resource.api_gw_proxy.id
+  http_method   = "ANY"
+  authorization = "NONE"
 }
 
-resource "aws_apigatewayv2_route" "simple_lambda_main" {
-  api_id = aws_apigatewayv2_api.simple_lambda_api_gw.id
+// integrate this gateway with lambda
+// aws_proxy lets api_gw invoke an aws resource
+resource "aws_api_gateway_integration" "lambda_api_gw_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api_gw_rest.id
+  # below same as aws_api_gateway_resource.api_gw_proxy.id
+  resource_id = aws_api_gateway_method.api_gw_proxy_method.resource_id
+  http_method = aws_api_gateway_method.api_gw_proxy_method.http_method
 
-  route_key = "GET /main"
-  target    = "integrations/${aws_apigatewayv2_integration.simple_lambda_integration.id}"
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.simple_lambda.invoke_arn
 }
 
-resource "aws_lambda_permission" "simple_lambda_api_gw_invocation" {
-  statement_id  = "AllowExecutionFromAPIGateway"
+// must have root "/"" before building sub-routes
+resource "aws_api_gateway_method" "api_gw_proxy_root_method" {
+  rest_api_id   = aws_api_gateway_rest_api.api_gw_rest.id
+  resource_id   = aws_api_gateway_rest_api.api_gw_rest.root_resource_id
+  http_method   = "ANY"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "lambda_api_gw_root_integration" {
+  rest_api_id = aws_api_gateway_rest_api.api_gw_rest.id
+  # below same as aws_api_gateway_rest_api.api_gw_rest.root_resource_id
+  resource_id = aws_api_gateway_method.api_gw_proxy_root_method.resource_id
+  http_method = aws_api_gateway_method.api_gw_proxy_root_method.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.simple_lambda.invoke_arn
+}
+
+// deploy the api gateway on the internet
+// activate & expose the api gateway endpoint for testing
+resource "aws_api_gateway_deployment" "api_gw_deploy" {
+  depends_on = [
+    aws_api_gateway_integration.lambda_api_gw_integration,
+    aws_api_gateway_integration.lambda_api_gw_root_integration
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.api_gw_rest.id
+  stage_name  = "test"
+}
+
+
+// == finally allow access from api gw to lambda == //
+// give permission to api gw to invoke function
+resource "aws_lambda_permission" "api_gw_invoke_lambda" {
+  statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.simple_lambda.function_name
   principal     = "apigateway.amazonaws.com"
 
-  source_arn = "${aws_apigatewayv2_api.simple_lambda_api_gw.execution_arn}/*/**"
+  // allow mapping/passing any resources within api_gw_rest to lambda function
+  source_arn = "${aws_api_gateway_rest_api.api_gw_rest.execution_arn}/*/*"
 }
