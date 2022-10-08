@@ -88,103 +88,113 @@ Removing network simple-lambda_default
 
 ---
 ## 3. Use terraform to provision AWS resources
-- First create the variables. Note that bucket name needs to be unique:
+- Terraform actions are wrapped within the `tf-env` service container in compose stack & bash scripts within `./terraform`.
+
+- First enter the container:
+
 ```sh
 $
-cd terraform
-cp variables.tf.example variables.tf
+docker-compose run tf-env
 ```
-- Then change the values
-- Also change the bucket name for tf backend state:
+- In the container's shell, use the pre-written scripts for `plan` & `apply`:
 ```sh
-  backend "s3" {
-    bucket = "yours"
-    ...
-```
-- init, plan & apply
-```sh
-$
-terraform init
+/app/terraform $ sh tf-plan.sh
 ```
 output:
 ```console
+..Running init
+
 Initializing the backend...
+
 Initializing provider plugins...
 - Reusing previous version of hashicorp/aws from the dependency lock file
 - Using previously-installed hashicorp/aws v3.75.2
 
 Terraform has been successfully initialized!
+
+You may now begin working with Terraform. Try running "terraform plan" to see
+any changes that are required for your infrastructure. All Terraform commands
+should now work.
+
+If you ever set or change modules or backend configuration for Terraform,
+rerun this command to reinitialize your working directory. If you forget, other
+commands will detect it and remind you to do so if necessary.
+..Plan
+data.aws_iam_policy_document.lambda_logging_policy: Reading...
+
 ...
+
+Plan: 13 to add, 0 to change, 0 to destroy.
 ```
+- Review. Once ready, apply (enter yes at prompt):
 ```sh
-$
-terraform plan
+/app/terraform $ sh tf-apply.sh
 ```
 output:
 ```console
-Terraform used the selected providers to generate the
-following execution plan. Resource actions are indicated
-with the following symbols:
+..Running init
+
+Initializing the backend...
+
+Initializing provider plugins...
+- Reusing previous version of hashicorp/aws from the dependency lock file
+- Using previously-installed hashicorp/aws v3.75.2
+
+Terraform has been successfully initialized!
+
 ...
 
-Plan: 10 to add, 0 to change, 0 to destroy.
-...
-```
-```sh
-$
-terraform apply
-```
-output:
-```console
-Terraform used the selected providers to generate the
-following execution plan. Resource actions are indicated
-with the following symbols:
-...
-
-Plan: 10 to add, 0 to change, 0 to destroy.
+Plan: 13 to add, 0 to change, 0 to destroy.
 
 Do you want to perform these actions?
   Terraform will perform the actions described above.
   Only 'yes' will be accepted to approve.
 
-  Enter a value:
+  Enter a value: yes
 ```
-- Yes and enter
 
-output:
 ```console
 aws_cloudwatch_log_group.simple_log_group: Creating...
-aws_iam_policy.lambda_logging: Creating...
-aws_iam_role.simple_lambda_iam: Creating...
-aws_s3_bucket.simple_bucket: Creating...
+aws_iam_policy.lambda_logging_policy: Creating...
+
 ...
 
-Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
+aws_api_gateway_deployment.api_gw_deploy: Creating...
+aws_api_gateway_deployment.api_gw_deploy: Creation complete after 1s [id=wc6nag]
+
+Apply complete! Resources: 13 added, 0 changed, 0 destroyed.
 ```
-- Tear down
+
+- Test the stack. Use the url provided by aws (WIP), replace `/{proxy+}` with `/main` to observe the output.
+- Once all is done, tear down (enter yes at prompt):
 ```sh
-$
-terraform destroy
+/app/terraform $ terraform destroy
 ```
 output:
 ```console
-aws_iam_policy.lambda_logging: Refreshing state...
+data.aws_iam_policy_document.lambda_logging_policy: Reading...
+aws_cloudwatch_log_group.simple_log_group: Refreshing state... [id=/aws/lambda/simple-lambda]
+data.aws_iam_policy_document.assume_role_policy: Reading...
+
 ...
 
-Plan: 0 to add, 0 to change, 10 to destroy.
+Plan: 0 to add, 0 to change, 13 to destroy.
 
 Do you really want to destroy all resources?
   Terraform will destroy all your managed infrastructure, as shown above.
   There is no undo. Only 'yes' will be accepted to confirm.
 
-  Enter a value:
+  Enter a value: yes
 ```
-- Yes and enter
 
-output:
 ```console
-aws_iam_role_policy.revoke_keys_role_policy: Destroying...
+aws_iam_role_policy_attachment.lambda_logs: Destroying... [id=simple-lambda-iam-role-20221008034306570000000001]
+aws_lambda_permission.api_gw_invoke_lambda: Destroying... [id=AllowAPIGatewayInvoke]
+
 ...
 
-Destroy complete! Resources: 10 destroyed.
+aws_iam_policy.lambda_logging_policy: Destruction complete after 2s
+aws_iam_role.simple_lambda_iam_role: Destruction complete after 4s
+
+Destroy complete! Resources: 13 destroyed.
 ```
