@@ -5,6 +5,7 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "AWS_ACCESS_KEY_ID=local AWS_SECRET_ACCESS_KEY=local jest",
+		"dev": "ts-node src/express-entrypoint.ts",
 		"prebuild": "rm -rf dist",
 		"build": "tsc && esbuild ./src --bundle --minify --sourcemap --platform=node --target=es2018 --outfile=dist/index.js",
 		"postbuild": "cd dist && zip -r index.zip index.js* && cp index.zip ../terraform/",

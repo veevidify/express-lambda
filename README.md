@@ -1,8 +1,9 @@
 ## Contents.
 - [Contents.](#contents)
 - [1. Simple lambda overview](#1-simple-lambda-overview)
-- [2. Local](#2-local)
-- [3. Use terraform to provision AWS resources](#3-use-terraform-to-provision-aws-resources)
+- [2. Development](#2-development)
+- [3. Local](#3-local)
+- [4. Use terraform to provision AWS resources](#4-use-terraform-to-provision-aws-resources)
 
 ---
 ## 1. Simple lambda overview
@@ -10,7 +11,29 @@
 - Test locally with localstack docker container
 
 ---
-## 2. Local
+## 2. Development
+- Clone & install dependencies:
+```sh
+$
+git clone git@github.com:veevidify/express-lambda.git
+cd express-lambda
+npm clean-install
+```
+- Start local version of the express instance to test functionalities:
+```sh
+$
+npm run dev
+```
+output:
+```console
+> simple-lambda@1.0.0 dev
+> ts-node src/express-entrypoint.ts
+
+Application listening on port 8080 ...
+```
+
+---
+## 3. Local
 - Make sure `aws-cli` v2 is installed
 - Start localstack
 ```sh
@@ -87,7 +110,7 @@ Removing network simple-lambda_default
 ```
 
 ---
-## 3. Use terraform to provision AWS resources
+## 4. Use terraform to provision AWS resources
 - Terraform actions are wrapped within the `tf-env` service container in compose stack & bash scripts within `./terraform`.
 
 - First enter the container:
